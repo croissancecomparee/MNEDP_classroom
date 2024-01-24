@@ -1,0 +1,53 @@
+// Parameters
+ int nn = 30;
+
+ //real T=36000;
+//real dt=10;
+int C=10;
+int nb=2;
+//int Text=8;
+
+border C1(t=0.,0.3){x=t;y=0.; }
+border C2(t=0.,0.7){x=0.3;y=t; }
+border C3(t=0.3,0.7){x=t;y=0.7; }
+border C4(t=0.7,0.){x=0.7;y=t; }
+border C5(t=0.7,1.){x=t;y=0.; }
+border C6(t=0.,1.){x=1.;y=t; }
+border C7(t=0.,1.){x=1.-t;y=1.;}
+border C8(t=0.,1.){x=0.;y=1.-t;}
+
+plot(C1(10)+C2(10)+C3(10)+C4(10)+C5(10)+C6(10)+C7(10)+C8(10),wait=1);
+
+ // Mesh
+mesh Th = buildmesh(C1(3*nb)+C2(7*nb)+C3(4*nb)+C4(7*nb)+C5(3*nb)+C6(10*nb)+C7(10*nb)+C8(10*nb));
+
+plot(Th, wait=true); //plot the mesh
+
+func f = (x>0.85)*(x<0.95)*(y>0.85)*(y<0.95)*0.5;
+
+ // Fespace
+ fespace Uh(Th, P1);
+ Uh u, v;
+ Uh uu, vv;
+
+ fespace Ph(Th, P1);
+ Ph p, pp;
+
+ // Problem
+ solve stokes ([u, v, p], [uu, vv, pp])
+ = int2d(Th)(
+ dx(u)*dx(uu)
+ + dy(u)*dy(uu)
+ + dx(v)*dx(vv)
+ + dy(v)*dy(vv)
+ + dx(p)*uu
+ + dy(p)*vv
+ + pp*(dx(u) + dy(v))
+ - 1e-10*p*pp
+ )
+ + on(C1, C2, C3, C4, C5, C7, C8, u=0, v=0)
+ + on(C6, u=1, v=0)
+ ;
+
+ // Plot
+ plot([u, v], p, wait=1);

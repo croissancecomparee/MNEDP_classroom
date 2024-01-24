@@ -1,0 +1,73 @@
+// Parameters
+int C1=10;
+int C2=11; //could be anything such that !=0 and C1!=C2
+
+
+real D=2e-5;
+int Text=8;
+real S=0.5;
+int K=1;
+
+real beta=K;
+real alpha=1;
+real g=K*Text;
+
+
+// Mesh
+border C11(t=0., 1.){x=0.+t; y=1; label=C2;}
+border C12(t=0., 1.){x=1.; y=1.-t; label=C2;}
+border C13(t=0., 1.){x=1.-t; y=0; label=C2;}
+border C14(t=0., 1.){x=0; y=0.3*t; label=C2;} //bord bas
+border C15(t=0., 1.){x=0.7; y=0.3 + 0.4*t; label=C2;}
+border C16(t=0., 1.){x=0; y=0.7 + 0.3*t; label=C2;}
+border C17(t=0., 1.){x=0.7-0.7*t; y=0.7; label=C2;}
+border C18(t=0., 1.){x=0.+0.7*t; y=0.3; label=C2;}
+
+//border C21(t=0., 1.){x=0.7-0.7*t; y=0.7; label=C2;} //à mettre en C1
+//border C22(t=0., 1.){x=1.; y=1.-t; label=C2;}
+//border C23(t=0., 1.){x=0.+0.7*t; y=0.3; label=C2;} //à mettre en C1
+//border C24(t=0., 1.){x=0.; y=0; label=C2;}
+
+plot(C11(-5)+C12(-20)+C13(-5)+C14(-20)+C15(-20)+C16(-20)+C17(-20)+C18(-20),	wait=true, ps="heatexb.eps");
+
+mesh Th=buildmesh(C11(-5)+C12(-20)+C13(-5)+C14(-20)+C15(-20)+C16(-20)+C17(-20)+C18(-20));
+
+plot(Th,wait=1);
+
+
+func f =(x>0.85)*(x<0.95)*(y>0.85)*(y<0.95)*0.5;
+
+// Fespace
+fespace Vh(Th, P1);
+Vh u, v, uold;
+Vh kappa=1 + 2*(x<-1)*(x>-2)*(y<3)*(y>-3);
+
+// Solve
+
+solve a(u,v)=
+    -int1d(Th)(
+        ((D/alpha)*beta*u*v)
+    )
+    + int2d(Th)(
+        dx(u)*dx(v)+dy(u)*dy(v)
+    )
+    - int2d(Th)(
+        f*v
+    )
+    + int1d(Th)(
+        (D/alpha)*v*g);
+
+a;
+
+// Plot
+plot(u, wait=true, value=true, fill=true, ps="HeatExchanger.eps");
+
+ofstream ff("thermic.dat");/*
+for(real t = 0; t < 1.; t += 0.1){
+    uold = u; //equivalent to u^{n-1} = u^n
+    a; //here the thermic problem is solved
+    ff << u(3., 0.5) << endl;
+    plot(u);
+}*/
+
+//FreeFem++ cercle.edp

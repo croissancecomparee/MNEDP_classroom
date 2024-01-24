@@ -1,0 +1,125 @@
+// Parameters
+int nn = 30;
+
+func u0 = sin(pi*x)*sin(pi*y)*15+8;
+real Tf = 72*3600;
+real dt=20000;
+int C=5;
+int haut=4;
+
+real Text=15;
+
+border C0(t=0., 2.*pi){x=cos(t); y=sin(t);}
+
+
+int nb=8;
+real K=1;
+real D=2e-5;
+
+
+// plot the domain
+plot(C0(6*nb), wait =true);
+
+mesh Th= buildmesh(C0(6*nb));
+
+plot(Th, wait=true); // plot the mesh
+
+// Fespace
+fespace Uh(Th, P1b);
+Uh u, v;
+Uh uu, vv;
+
+fespace Ph(Th, P1);
+Ph p, pp;
+
+// Problem
+solve stokes ([u, v, p], [uu, vv, pp])
+    = int2d(Th)(
+        dx(u)*dx(uu)
+        + dy(u)*dy(uu)
+        + dx(v)*dx(vv)
+        + dy(v)*dy(vv)
+        + dx(p)*uu
+        + dy(p)*vv
+        + pp*(dx(u) + dy(v))
+        - 1e-10*p*pp
+    )
+    + on(C0, u=0, v=0);
+
+// Plot
+plot([u, v], p, wait=1);
+
+
+
+fespace Vh(Th,P1);
+
+func f=(x>-0.05)*(x<0.05)*(y>0.85)*(y<0.95);
+
+Vh vh,uold,fh;
+Vh uh=15;
+ 
+real beta=K;
+real alpha=1;
+real g=K*Text;
+real P=0.01;
+
+
+real [int] xx(Tf/dt), z1(Tf/dt), yy(Tf/dt), zz(Tf/dt), z2(Tf/dt);
+int i=0;
+real E = 0;
+
+
+real vmax=100;
+real vmin=8;
+int nbv=10;
+real[int] V(nbv);
+for (int i=0;i<nbv;i+=1){
+    V[i]=(i*(vmax-vmin)/(nbv-1))+vmin;
+}
+
+for (real t=0;t<Tf;t+=dt){
+    uold=uh;
+    fh=f*(1-sin(pi*t/(3600*12)))*P;
+    Text=15+5*sin(pi*t/(3600*12));
+    xx[i]=t;
+    yy[i]=Text;
+    zz[i]=uh(0.0,0.00);
+    z1[i]=fh(0.1,0.9);
+    z2[i]=uh[].min;
+    i++;
+    solve thermaxi(uh,vh,solver=LU)
+        = int2d(Th)(
+            (uh*vh)
+        )
+        + int1d(Th)(
+            dt*D*(vh/alpha)*beta*uh
+        )
+        + int2d(Th)(
+            dt*D* ( dx(uh)*dx(vh)+dy(uh)*dy(vh) )
+        )
+        - int2d(Th)(
+            (dt*fh*vh)
+        )
+        - int2d(Th)(
+            uold*vh
+        )
+        - int1d(Th)(
+            dt*(D/alpha)*vh*g
+        )
+        + int2d(Th)(
+            vh*((u)*(dx(uh))+(v)*(dy(uh)))
+        );
+    plot(uh,wait=false, value=true, fill=true,viso=V);
+    //E = E + 0.01*(dt *((1-sin(pi*t/(3600*12)))*P) );
+}
+
+plot([xx,yy],[xx,zz],[xx,z1],[xx,z2],value=true,wait=true);
+//cout << "E = " << E << endl ;
+
+
+
+
+
+
+
+

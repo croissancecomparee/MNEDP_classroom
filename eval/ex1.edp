@@ -1,0 +1,41 @@
+//variable
+
+// frontieres
+border gamma1(t=0.,2*pi){x=cos(t);y=sin(t);}
+border gamma2(t=0.,2*pi){x=0.4*cos(t);y=0.4*sin(t);}
+
+plot(gamma1(10)+gamma2(10),wait=true);
+
+mesh Th=buildmesh(gamma1(200)+gamma2(80));
+
+plot(Th,wait=true);
+
+fespace Vh(Th,P1);
+
+func iomega = ((x*x+y*y)>0.16)*((x*x+y*y)<1.);
+
+func ureel = (log(x*x+y*y)+log(6.25))/log(6.25)*iomega;
+
+//uh et vh elements de Vh
+Vh uh, vh;
+
+uh= uh*iomega;
+vh = vh*iomega;
+
+// probleme variationnel
+problem laplacien(uh,vh,solver=LU)=
+    int2d(Th)(dx(uh)*dx(vh)+dy(uh)*dy(vh))+on(gamma1,uh=0)+on(gamma2,uh=1);
+
+// resolution
+laplacien;
+
+// calcul de l'erreur
+Vh error = ureel-uh;
+
+real errL2 = sqrt(int2d(Th)(error^2));
+real errH1 = sqrt(int2d(Th)(dx(error)^2+dy(error)^2));
+cout << "erreur L2" << errL2 << endl;
+cout << "erreur H1" << errH1 << endl;
+
+// affichage
+plot(uh,wait=true);

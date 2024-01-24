@@ -1,0 +1,44 @@
+// variables
+int T=2;
+real dt=1e-2;
+func u0 = 0.;
+real phi = 0.;
+
+// frontieres
+border gamma1(t=0.,2*pi){x=cos(t);y=sin(t);}
+border gamma2(t=0.,2*pi){x=0.4*cos(t);y=0.4*sin(t);}
+
+plot(gamma1(10)+gamma2(10),wait=true);
+
+mesh Th=buildmesh(gamma1(100)+gamma2(40));
+
+plot(Th,wait=true);
+
+fespace Vh(Th,P1);
+
+func iomega = ((x*x+y*y)>0.16)*((x*x+y*y)<1.);
+
+func f = (x>0.6)*(x<0.9)*(y>-0.3)*(y<0.3);
+
+Vh uh=u0, vh,uold;
+
+uh = uh*iomega;
+vh = vh*iomega;
+
+problem thermic(uh,vh,solver=LU)=
+    int2d(Th)(uh*vh)
+    -int2d(Th)(uold*vh)
+    +int2d(Th)(dt*(dx(uh)*dx(vh)+dy(uh)*dy(vh)))
+    -int2d(Th)(dt*vh*f)
+    +on(gamma1,uh=0)
+    +on(gamma2,uh=0);
+
+for (real t=0;t<T;t+=dt){
+    uold=uh*iomega;
+    uh=uh*iomega;
+    //phi = max(phi,abs(uh-))
+    thermic;
+    plot(uh,wait=false,fill=true,value=true);
+}
+
+// reponse question phi(0) par lecture des resultats de l'exercice 2 car phi(0) = max|u(x,0)-v(x)|=max|0-v(x)|=max|v(x)|=0.0255285

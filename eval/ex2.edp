@@ -1,0 +1,35 @@
+// frontieres
+border gamma1(t=0.,2*pi){x=cos(t);y=sin(t);}
+border gamma2(t=0.,2*pi){x=0.4*cos(t);y=0.4*sin(t);}
+
+plot(gamma1(10)+gamma2(10),wait=true);
+
+mesh Th=buildmesh(gamma1(100)+gamma2(40));
+
+plot(Th,wait=true);
+
+
+fespace Vh(Th,P1);
+
+func iomega = ((x*x+y*y)>0.16)*((x*x+y*y)<1.);
+func f = (x>0.6)*(x<0.9)*(y>-0.3)*(y<0.3);
+
+Vh uh, vh;
+
+uh = uh*iomega;
+vh = vh*iomega;
+
+problem laplacien(uh,vh,solver=LU)=
+    int2d(Th)(dx(uh)*dx(vh)+dy(uh)*dy(vh))
+    -int2d(Th)(f*vh)
+    +on(gamma1,uh=0)
+    +on(gamma2,uh=0);
+
+laplacien;
+plot(uh,wait=true);
+
+cout << "A(0.7,0.35):" << uh(0.7,0.35) << endl;
+cout << "B(-0.7,0.35):" << uh(-0.7,0.35) << endl;
+cout << "C(0.,0.8):" << uh(0.,0.8) << endl;
+cout << "D(0.,-0.8):" << uh(0.,-0.8) << endl;
+

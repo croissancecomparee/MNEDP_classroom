@@ -1,0 +1,54 @@
+// parameters
+int C=9;
+int R=9;
+real D=2e-5;
+int Text=8;
+real S=0.5;
+func z=x;
+int K=1;
+
+int beta=K;
+int alpha=1;
+real g=K*Text;
+
+// Definition
+border C1(t=0.,0.3){x=t;y=0.; label=C;}
+border C2(t=0.,0.7){x=0.3;y=t; label=C;}
+border C3(t=0.3,0.7){x=t;y=0.7; label=C;}
+border C4(t=0.7,0.){x=0.7;y=t; label=C;}
+border C5(t=0.7,1.){x=t;y=0.; label=C;}
+border C6(t=0.,1.){x=1.;y=t; label=C;}
+border C7(t=0.,1.){x=1.-t;y=1.; label=C;}
+border C8(t=0.,1.){x=0.;y=1.-t; label=C;}
+
+plot(C1(10)+C2(10)+C3(10)+C4(10)+C5(10)+C6(10)+C7(10)+C8(10),wait=1);
+
+
+// mesh
+mesh Th=buildmesh(C1(20)+C2(20)+C3(20)+C4(20)+C5(20)+C6(20)+C7(20)+C8(20));
+
+// function
+
+func f = S * (x>0.85)*(x<0.95)*(y>0.85)*(y<0.95);
+
+// fespace
+fespace Vh(Th,P1);
+Vh u,v;
+
+// problem
+
+solve a(u,v)=
+    +int2d(Th)(
+        dx(u)*dx(v)+dy(u)*dy(v)
+        ) 
+    - int1d(Th)(
+        (D/alpha) *beta*u*v
+        ) 
+    + int1d(Th)(
+        (D/alpha)*K*Text*v) 
+    -int2d(Th)(
+        f*v
+        );
+    //+on(C,u=z);//+on(C2,u=1)+on(C3,u=1)+on(C4,u=1);
+
+plot(u,wait=true,value=true,fill=true);

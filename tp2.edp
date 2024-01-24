@@ -1,0 +1,60 @@
+func u0=sin(pi*x)*sin(pi*y)*15+8;
+real T=36000;
+real dt=10;
+int C=10;
+int Text=8;
+
+border C1(t=0.,0.3){x=t;y=0.; label=C;}
+border C2(t=0.,0.7){x=0.3;y=t; label=C;}
+border C3(t=0.3,0.7){x=t;y=0.7; label=C;}
+border C4(t=0.7,0.){x=0.7;y=t; label=C;}
+border C5(t=0.7,1.){x=t;y=0.; label=C;}
+border C6(t=0.,1.){x=1.;y=t; label=C;}
+border C7(t=0.,1.){x=1.-t;y=1.; label=C;}
+border C8(t=0.,1.){x=0.;y=1.-t; label=C;}
+
+int nb=2;
+real K=1;
+real D=2e-5;
+
+
+//plot the domain
+plot(C1(10)+C2(10)+C3(10)+C4(10)+C5(10)+C6(10)+C7(10)+C8(10),wait=1);
+
+mesh Th = buildmesh(C1(3*nb)+C2(7*nb)+C3(4*nb)+C4(7*nb)+C5(3*nb)+C6(10*nb)+C7(10*nb)+C8(10*nb));
+
+plot(Th, wait=true); //plot the mesh
+
+fespace Vh(Th,P1);
+
+func f = (x>0.85)*(x<0.95)*(y>0.85)*(y<0.95)*0.5;
+
+Vh uh=u0,vh,uold;
+
+problem thermic(uh,vh,solver=LU)=
+    int2d(Th)(
+        uh*vh
+    )
+    -int2d(Th)(
+        uold*vh
+    )
+    +int2d(Th)(
+        dt*D*(dx(uh)*dx(vh)+dy(uh)*dy(vh))
+    )
+    -int1d(Th)(
+        dt*D*K*Text*vh
+    )
+    -int2d(Th)(
+        dt*vh*f
+    )
+    +int1d(Th)(
+        dt*D*K*uh*vh*Text
+    );
+    
+
+
+for (real t=0;t<T;t+=dt){
+    uold=uh;
+    thermic;
+    plot(uh, value=true, fill=true,wait=false);
+}

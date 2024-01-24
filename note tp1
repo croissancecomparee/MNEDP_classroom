@@ -1,0 +1,19 @@
+Exercice1:
+pour nb noeuds = 10:
+- erreur L2 : 0.00026816
+- erreur H1 : 0.00122981
+
+pour nb noeuds = 20:
+- erreur L2 : 6.83322e-05
+- erreur H1 : 0.000311184
+
+pour nb noeuds = 5:
+- erreur L2 : 0.000994073
+- erreur H1 : 0.0046901
+
+=> erreur inversement proportionnelle au nombre de noeuds
+
+Exercice 2:
+
+
+ 

@@ -1,0 +1,30 @@
+// parameters
+int C=9;
+
+// Definition 
+border C0(t=0., 2.*pi){x=0.3*cos(t)+0.5; y=0.3*sin(t)+0.5;}
+
+border C1(t=0.,1.){x=t;y=0.; label=C;}
+border C2(t=0.,1.){x=1.;y=t; label=C;}
+border C3(t=0.,1.){x=1.-t;y=1.; label=C;}
+border C4(t=0.,1.){x=0.;y=1.-t; label=C;}
+
+
+plot(C0(50)+ C1(10)+C2(10)+C3(10)+C4(10),wait=0);
+
+
+mesh Th=buildmesh(C0(-10)+C1(5)+C2(5)+C3(5)+C4(5));
+
+//plot(Th,wait=1);
+
+func f=1;
+
+// Fespace
+fespace Vh(Th, P1);
+Vh u, v;
+
+// Definition du probleme variationnel
+solve a(u,v)=int2d(Th)(dx(u)*dx(v)+dy(u)*dy(v))+on(C0,u=0)+on(C,u=1);//+on(C2,u=1)+on(C3,u=1)+on(C4,u=1);
+//solve a(u,v) = 
+
+plot(u,wait=true, value=true, fill=true);

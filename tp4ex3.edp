@@ -1,0 +1,75 @@
+real K=1;
+real T=3600.;
+int dt=10;
+int Tf=72*3600;
+//int Omega=10;
+real P = 0.1;
+real D=2e-5;
+real u0=15.;
+real Text = 15.;
+real E=0.;
+real gamma = 2e-3;
+//real fh = 1.;
+real [int] xx(Tf/dt), z1(Tf/dt), yy(Tf/dt), zz(Tf/dt), z2(Tf/dt);
+
+int i=0;
+
+
+border Omega(t=0.,2*pi){x=cos(t);y=sin(t);}
+
+plot(Omega(100),wait=true);
+
+mesh Th = buildmesh(Omega(200));
+
+plot(Th, wait=true);
+
+func f = (x>-0.05)*(x<0.05)*(y>0.85)*(y<0.95);
+
+func vx = -gamma*(x*x+y*y)*(1-(x*x+y*y))*y;
+func vy = gamma*(x*x+y*y)*(1-(x*x+y*y))*x;
+
+fespace Vh(Th,P1);
+
+Vh uh=u0,vh,uold, fh;
+
+
+
+problem thermic(uh,vh,solver=LU)=
+    int2d(Th)(
+        uh*vh
+    )
+    -int2d(Th)(
+        uold*vh
+    )
+    +int2d(Th)(
+        dt*D*(dx(uh)*dx(vh)+dy(uh)*dy(vh))
+    )
+    -int1d(Th)(
+        dt*D*K*Text*vh
+    )
+    -int2d(Th)(
+        dt*vh*f
+    )
+    +int1d(Th)(
+        dt*D*K*uh*vh*Text
+    )
+    +int2d(Th)(
+        vh*(dt*vy*dy(uh)-dt*vx*dx(uh))
+    );
+
+for (real t=0;t<Tf;t+=dt) {
+    uold=uh;
+    fh=f*(1-sin(pi*t/(3600*12)))*P;
+    Text=15*5*sin(pi*t/(3600*12));
+    E+=dt*int2d(Th)(fh);
+    thermic;//(uh,vh,solver=LU);//=int2d(Th)(uh*vh/dt)+...;
+    plot(uh,wait=false,value=true,grey=false,fill=true);
+    xx[i]=t;
+    yy[i]=Text;
+    zz[i]=uh(0.0,0.0);
+    z1[i]=fh(0.1,0.9);
+    z2[i]=uh[].min;
+    i++;
+}
+
+plot([xx,yy],[xx,zz], [xx,z1],[xx,z2],value=true,wait=true);

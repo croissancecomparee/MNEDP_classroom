@@ -1,0 +1,64 @@
+//Nombre de mailles suivant x et y
+int Nbnoeuds=10;
+real cpu=clock();
+
+int C1=99;
+int C2=98;
+
+border C0(t=0., 2.*pi){x=5.*cos(t); y=5.*sin(t);}
+
+border C11(t=0., 1.){x=1.+t; y=3.; label=C1;}
+border C12(t=0., 1.){x=2.; y=3.-6.*t; label=C1;}
+border C13(t=0., 1.){x=2.-t; y=-3.; label=C1;}
+border C14(t=0., 1.){x=1.; y=-3.+6.*t; label=C1;}
+
+border C21(t=0., 1.){x=-2.+t; y=3.; label=C2;}
+border C22(t=0., 1.){x=-1.; y=3.-6.*t; label=C2;}
+border C23(t=0., 1.){x=-1.-t; y=-3.; label=C2;}
+border C24(t=0., 1.){x=-2.; y=-3.+6.*t; label=C2;}
+
+//Definition du maillage
+mesh Th=square(Nbnoeuds,Nbnoeuds,[x,y]);
+cout << "temps CPU apres def du domaine = " << (clock()-cpu) << endl;
+
+//Fonction de x et de y
+func f=2.0*x*(1.0-x)+2.0*y*(1.0-y);
+
+//Definition de l'espace des elements 
+//finis P1 associe au maillage Th
+fespace Vh(Th,P1) ;
+cout << "temps CPU apres def du maillage = " << (clock()-cpu) << endl ;
+
+//uh et vh sont des elements de Vh
+Vh uh,vh ;
+
+//Definition du probleme variationnel
+problem laplacien(uh,vh,solver=LU)=int2d(Th)(dx(uh)*dx(vh)+dy(uh)*dy(vh))-int2d(Th)(f*vh)+on(1,2,3,4,uh=0) ;
+cout << "temps CPU apres def du probleme var = " << (clock()-cpu) << endl ;
+
+//Resolution du probleme
+laplacien ;
+cout << "temps CPU apres resolution = " << (clock()-cpu) << endl ;
+
+// Calcul de l'erreur
+func u=x*(1.0-x)*y*(1.0-y) ;
+Vh error=u-uh ;
+
+real errL2 =sqrt(int2d(Th)(error^2)) ;
+real errH1 =sqrt(int2d(Th)(dx(error)^2+dy(error)^2)) ;
+cout << "erreur L2 "<< errL2 << endl ;
+cout << "erreur H1 "<< errH1 << endl ;
+
+//On affiche le resultat
+//plot(Th,wait=true) ;
+//plot(uh,wait=true) ;
+
+plot( C0(50) + C11(5)+C12(20)+C13(5)+C14(20) + C21(-5)+C22(-20)+C23(-5)+C24(-20), wait=true);
+
+mesh Th=buildmesh(C0(50)
++ C11(5)+C12(20)+C13(5)+C14(20)
++ C21(-5)+C22(-20)+C23(-5)+C24(-20));
+plot(Th,wait=1);
+
+//erreur diminue quand Nbnoeuds augmente
+//P2 plus précis mais plus lent que P1
